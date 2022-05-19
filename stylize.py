@@ -88,7 +88,7 @@ def stylize_folder_single(style_path, content_folder, save_folder, ratio):
             if num_imgs > 10 and not i%(num_imgs//10):
                 print(f'Generation at {i/num_imgs*10}%')
 
-def stylize_folder(style_path, folder_containing_the_content_folder, save_folder, batch_size=1):
+def stylize_folder(style_path, folder_containing_the_content_folder, save_folder, batch_size=32):
     """Stylizes images in a folder by batch
     If the images  are of different dimensions, use transform.resize() or use a batch size of 1
     IMPORTANT: Put content_folder inside another folder folder_containing_the_content_folder

@@ -5,8 +5,9 @@ import os
 from torchvision import transforms
 import time
 import cv2
+import numpy as np
 
-STYLE_TRANSFORM_PATH = "transforms/udnie_aggressive.pth"
+STYLE_TRANSFORM_PATH = "transforms/wave.pth"
 PRESERVE_COLOR = False
 
 def stylize():
@@ -34,7 +35,8 @@ def stylize():
             utils.show(generated_image)
             utils.saveimg(generated_image, "helloworld.jpg")
 
-def stylize_folder_single(style_path, content_folder, save_folder):
+
+def stylize_folder_single(style_path, content_folder, save_folder, ratio):
     """
     Reads frames/pictures as follows:
 
@@ -61,12 +63,17 @@ def stylize_folder_single(style_path, content_folder, save_folder):
     net = net.to(device)
 
     # Stylize every frame
-    images = [img for img in os.listdir(content_folder) if img.endswith(".jpg")]
+    images = np.array([img for img in os.listdir(content_folder)])
+    
+    num_imgs = len(images)
+    # Pick images to transform on an evenly spaced interval
+    idx_to_conv = np.arange(0, num_imgs, 1//ratio, dtype=int)
+    imgs_selection = images[idx_to_conv]
+
     with torch.no_grad():
-        for image_name in images:
+        for i, image_name in enumerate(imgs_selection):
             # Free-up unneeded cuda memory
             torch.cuda.empty_cache()
-            
             # Load content image
             content_image = utils.load_image(content_folder + image_name)
             content_tensor = utils.itot(content_image).to(device)
@@ -78,6 +85,8 @@ def stylize_folder_single(style_path, content_folder, save_folder):
                 generated_image = utils.transfer_color(content_image, generated_image)
             # Save image
             utils.saveimg(generated_image, save_folder + image_name)
+            if num_imgs > 10 and not i%(num_imgs//10):
+                print(f'Generation at {i/num_imgs*10}%')
 
 def stylize_folder(style_path, folder_containing_the_content_folder, save_folder, batch_size=1):
     """Stylizes images in a folder by batch
@@ -131,5 +140,3 @@ def stylize_folder(style_path, folder_containing_the_content_folder, save_folder
                     generated_image = utils.transfer_color(content_image, generated_image)
                 image_name = os.path.basename(path[i])
                 utils.saveimg(generated_image, save_folder + image_name)
-
-#stylize()
